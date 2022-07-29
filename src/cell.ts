@@ -27,6 +27,10 @@ export class Cell {
         copy.alive = this.alive
         return copy
     }
+
+    toString(): string {
+        return `${this.alive ? "alive" : "dead"}`
+    }
 }
 
 export class CellGrid extends GridArray<Cell> {
@@ -34,27 +38,41 @@ export class CellGrid extends GridArray<Cell> {
     private width: number
     private height: number
     private size: number
+    private padding: number
 
-    constructor(width: number, height: number, size: number) {
-        const rows = height / size
-        const cols = width / size
+    private min: number
+    private maxX: number
+    private maxY: number
+
+    constructor(width: number, height: number, size: number, padding: number = 0) {
+        const rows = (height + padding * 2) / size
+        const cols = (width + padding * 2) / size
         super(rows, cols)
 
-        this.width = width
-        this.height = height
+        this.width = cols * size
+        this.height = rows * size
         this.size = size
+        this.padding = padding
+
+        this.min = 0 - padding
+        this.maxX = width + padding
+        this.maxY = height + padding
+    }
+
+    getCells(): Array<Array<Cell>> {
+        return this.grid
     }
 
     getCell(x: number, y: number): Cell {
-        const row = y / this.size
-        const col = x / this.size
-        return this.grid[row][col]
+        const row = (y + this.padding) / this.size
+        const col = (x + this.padding) / this.size
+        return this.get(row, col)
     }
 
     setCell(x: number, y: number, object: Cell) {
-        const row = y / this.size
-        const col = x / this.size
-        this.grid[row][col] = object
+        const row = (y + this.padding) / this.size
+        const col = (x + this.padding) / this.size
+        this.set(row, col, object)
     }
 
     getNeighbors(x: number, y: number): Array<Cell> {
@@ -62,11 +80,11 @@ export class CellGrid extends GridArray<Cell> {
 
         for (let xo = -this.size; xo <= this.size; xo += this.size) {
             for (let yo = -this.size; yo <= this.size; yo += this.size) {
-                const nx = x + xo
-                const ny = y + yo
+                const nx = x + xo + this.padding
+                const ny = y + yo + this.padding
 
                 const isTargetCell = nx == x && ny == y
-                const isOutOfBounds = nx < 0 || ny < 0 || nx >= this.width || ny >= this.height
+                const isOutOfBounds = nx < this.min || ny < this.min || nx >= this.maxX || ny >= this.maxY
                 if (!isTargetCell && !isOutOfBounds)
                     neighbors.push(this.getCell(nx, ny))
             }

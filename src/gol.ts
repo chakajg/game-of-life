@@ -5,19 +5,15 @@ export class GameOfLife {
     private static PADDING = 100
     private static CELL_SIZE = 10
 
-    private width: number
-    private height: number
     private ctx: CanvasRenderingContext2D
 
     private grid: CellGrid
 
     constructor(canvasId: string) {
         const canvas = document.querySelector<HTMLCanvasElement>(`#${canvasId}`)!!
-        this.width = canvas.width + GameOfLife.PADDING
-        this.height = canvas.height + GameOfLife.PADDING
         this.ctx = canvas.getContext("2d")!!
 
-        this.grid = new CellGrid(this.width, this.height, GameOfLife.CELL_SIZE)
+        this.grid = new CellGrid(canvas.width, canvas.height, GameOfLife.CELL_SIZE, GameOfLife.PADDING)
     }
 
 
@@ -27,6 +23,7 @@ export class GameOfLife {
     }
 
     draw() {
+        console.table(this.grid.getCells())
         const next = this.grid.copy()
         this.grid.forEach(cell => {
             cell.draw(this.ctx)
