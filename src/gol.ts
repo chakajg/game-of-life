@@ -1,5 +1,4 @@
 import { Cell, CellGrid } from "./cell.js"
-import { Util } from "./util.js"
 
 export class GameOfLife {
 
@@ -24,7 +23,7 @@ export class GameOfLife {
 
     init() {
         this.grid.populate((row, col) => new Cell(col * GameOfLife.CELL_SIZE, row * GameOfLife.CELL_SIZE, GameOfLife.CELL_SIZE))
-        this.grid.forEach(cell => cell.alive = Util.random())
+        this.grid.forEach(cell => cell.alive = false)
     }
 
     draw() {

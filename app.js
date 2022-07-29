@@ -12,6 +12,7 @@ window.gol = (function () {
     // create Game of Life
     const gol = new GameOfLife(canvas.id)
     gol.init()
+    createGlider(1, 1)
 
     // create buttons
     const startButton = document.createElement("button")
@@ -62,7 +63,17 @@ window.gol = (function () {
     function restart() {
         stop()
         gol.init()
+        createGlider(1, 1)
+        createGlider(1, 10)
         start()
+    }
+
+    function createGlider(row, col) {
+        gol.grid.get(row + 0, col + 1).alive = true
+        gol.grid.get(row + 1, col + 2).alive = true
+        gol.grid.get(row + 2, col + 0).alive = true
+        gol.grid.get(row + 2, col + 1).alive = true
+        gol.grid.get(row + 2, col + 2).alive = true
     }
 
     return gol
