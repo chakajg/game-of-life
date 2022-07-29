@@ -49,14 +49,22 @@ export class CellGrid extends GridArray<Cell> {
         const cols = (width + padding * 2) / size
         super(rows, cols)
 
-        this.width = cols * size
-        this.height = rows * size
+        this.width = width
+        this.height = height
         this.size = size
         this.padding = padding
 
         this.min = 0 - padding
         this.maxX = width + padding
         this.maxY = height + padding
+    }
+
+    populateCells(populator: (x: number, y: number) => Cell) {
+        this.populate((row, col) => {
+            const x = col * this.size - this.padding
+            const y = row * this.size - this.padding
+            return populator(x, y)
+        })
     }
 
     getCells(): Array<Array<Cell>> {
@@ -69,10 +77,10 @@ export class CellGrid extends GridArray<Cell> {
         return this.get(row, col)
     }
 
-    setCell(x: number, y: number, object: Cell) {
+    setCell(x: number, y: number, cell: Cell) {
         const row = (y + this.padding) / this.size
         const col = (x + this.padding) / this.size
-        this.set(row, col, object)
+        this.set(row, col, cell)
     }
 
     getNeighbors(x: number, y: number): Array<Cell> {
@@ -80,8 +88,8 @@ export class CellGrid extends GridArray<Cell> {
 
         for (let xo = -this.size; xo <= this.size; xo += this.size) {
             for (let yo = -this.size; yo <= this.size; yo += this.size) {
-                const nx = x + xo + this.padding
-                const ny = y + yo + this.padding
+                const nx = x + xo
+                const ny = y + yo
 
                 const isTargetCell = nx == x && ny == y
                 const isOutOfBounds = nx < this.min || ny < this.min || nx >= this.maxX || ny >= this.maxY
@@ -94,7 +102,7 @@ export class CellGrid extends GridArray<Cell> {
     }
 
     copy(): CellGrid {
-        const next = new CellGrid(this.width, this.height, this.size)
+        const next = new CellGrid(this.width, this.height, this.size, this.padding)
         next.populate((row, col) => this.get(row, col).copy())
         return next
     }

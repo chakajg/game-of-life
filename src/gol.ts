@@ -3,7 +3,7 @@ import { Cell, CellGrid } from "./cell.js"
 export class GameOfLife {
 
     private static PADDING = 100
-    private static CELL_SIZE = 10
+    private static CELL_SIZE = 5
 
     private ctx: CanvasRenderingContext2D
 
@@ -18,12 +18,11 @@ export class GameOfLife {
 
 
     init() {
-        this.grid.populate((row, col) => new Cell(col * GameOfLife.CELL_SIZE, row * GameOfLife.CELL_SIZE, GameOfLife.CELL_SIZE))
+        this.grid.populateCells((x, y) => new Cell(x, y, GameOfLife.CELL_SIZE))
         this.grid.forEach(cell => cell.alive = false)
     }
 
     draw() {
-        console.table(this.grid.getCells())
         const next = this.grid.copy()
         this.grid.forEach(cell => {
             cell.draw(this.ctx)

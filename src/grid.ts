@@ -21,7 +21,7 @@ export class GridArray<T> {
     populate(populator: (row: number, col: number) => T) {
         this.populated = true
         this.iterate((row: number, col: number) => {
-            const t = populator(row, col)
+            const t = populator.call(this, row, col)
             this.set(row, col, t)
         })
     }

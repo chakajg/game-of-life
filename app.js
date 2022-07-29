@@ -1,4 +1,5 @@
 import { GameOfLife } from "./dist/gol.js"
+import { Util } from "./dist/util.js"
 
 window.gol = (function () {
     // create canvas
@@ -12,7 +13,7 @@ window.gol = (function () {
     // create Game of Life
     const gol = new GameOfLife(canvas.id)
     gol.init()
-    createGlider(1, 1)
+    gol.grid.forEach(cell => cell.alive = Util.random())
 
     // create buttons
     const startButton = document.createElement("button")
@@ -34,7 +35,7 @@ window.gol = (function () {
     document.body.append(startButton, stopButton, stepButton, restartButton)
 
     // setup animation loop
-    const fps = 10;
+    const fps = 25;
     const interval = 1000 / fps;
     let currentMs;
     let lastFrameMs = Date.now();
@@ -63,17 +64,48 @@ window.gol = (function () {
     function restart() {
         stop()
         gol.init()
-        createGlider(1, 1)
-        createGlider(1, 10)
-        start()
+        //gol.grid.forEach(cell => cell.alive = Util.random())
+        createGliderRightDown(10, 10)
+        createGliderLeftDown(100, 10)
+        createGliderRightUp(10, 100)
+        createGliderLeftUp(100, 100)
+        gol.draw()
     }
 
-    function createGlider(row, col) {
-        gol.grid.get(row + 0, col + 1).alive = true
-        gol.grid.get(row + 1, col + 2).alive = true
-        gol.grid.get(row + 2, col + 0).alive = true
-        gol.grid.get(row + 2, col + 1).alive = true
-        gol.grid.get(row + 2, col + 2).alive = true
+    function createGliderRightDown(x, y) {
+        const step = gol.grid.size
+        gol.grid.getCell(x + 0 * step, y + 1 * step).alive = true
+        gol.grid.getCell(x + 1 * step, y + 2 * step).alive = true
+        gol.grid.getCell(x + 2 * step, y + 0 * step).alive = true
+        gol.grid.getCell(x + 2 * step, y + 1 * step).alive = true
+        gol.grid.getCell(x + 2 * step, y + 2 * step).alive = true
+    }
+
+    function createGliderLeftDown(x, y) {
+        const step = gol.grid.size
+        gol.grid.getCell(x + 0 * step, y + 0 * step).alive = true
+        gol.grid.getCell(x + 0 * step, y + 1 * step).alive = true
+        gol.grid.getCell(x + 0 * step, y + 2 * step).alive = true
+        gol.grid.getCell(x + 1 * step, y + 2 * step).alive = true
+        gol.grid.getCell(x + 2 * step, y + 1 * step).alive = true
+    }
+
+    function createGliderRightUp(x, y) {
+        const step = gol.grid.size
+        gol.grid.getCell(x + 0 * step, y + 1 * step).alive = true
+        gol.grid.getCell(x + 1 * step, y + 0 * step).alive = true
+        gol.grid.getCell(x + 2 * step, y + 0 * step).alive = true
+        gol.grid.getCell(x + 2 * step, y + 1 * step).alive = true
+        gol.grid.getCell(x + 2 * step, y + 2 * step).alive = true
+    }
+
+    function createGliderLeftUp(x, y) {
+        const step = gol.grid.size
+        gol.grid.getCell(x + 0 * step, y + 0 * step).alive = true
+        gol.grid.getCell(x + 0 * step, y + 1 * step).alive = true
+        gol.grid.getCell(x + 0 * step, y + 2 * step).alive = true
+        gol.grid.getCell(x + 1 * step, y + 0 * step).alive = true
+        gol.grid.getCell(x + 2 * step, y + 1 * step).alive = true
     }
 
     return gol
