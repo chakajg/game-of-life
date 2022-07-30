@@ -1,57 +1,128 @@
 import { GameOfLife } from "./dist/gol.js"
 import { Util } from "./dist/util.js"
+import { Parts } from "./dist/parts.js"
 
 window.gol = (function () {
-    // create canvas
+    // DEMO DATA
+    const WIDTH = 600
+    const HEIGHT = 600
+    const SPAWN_FACTOR = 0.2
+    let FPS = 25
+    let RUNNING = false
+
+    // CONTAINER
+    const body = document.createElement("div")
+    body.classList.add("m-1")
+    body.style.width = `${WIDTH}px`
+    body.style.height = `${HEIGHT}px`
+    body.style.outline = "1px solid black"
+    body.style.display = "inline-block"
+    body.style.boxSizing = "border-box"
+    document.body.append(body)
+
+    // OVERLAY
+    const overlay = document.createElement("canvas")
+    overlay.id = "overlay"
+    body.append(overlay)
+
+    // CANVAS
     const canvas = document.createElement("canvas")
     canvas.id = "gol"
-    canvas.width = 300
-    canvas.height = 300
-    canvas.style.border = "1px solid black"
-    document.body.append(canvas)
+    canvas.width = WIDTH
+    canvas.height = HEIGHT
+    body.append(canvas)
 
-    // create Game of Life
-    const gol = new GameOfLife(canvas.id)
+    // GAME OF LIFE
+    const gol = new GameOfLife(canvas.id, overlay.id)
+    // click handlers
+    gol.addLeftClickHandler(createPart)
+    gol.addRightClickHandler(cycleParts)
+    // overlays
+    gol.addDynamicLayer(createPreview)
+    //gol.addPermanentLayer(createGrid, () => gol.editMode)
+    // init
     gol.init()
-    gol.grid.forEach(cell => cell.alive = Util.random())
+    //gol.getGrid().forEach(cell => cell.alive = Util.random(SPAWN_FACTOR))
 
-    // create buttons
+    // CONTROLS
+    const container = document.createElement("div")
+    const editContainer = document.createElement("div")
+
     const startButton = document.createElement("button")
     startButton.innerText = "Start"
+    startButton.classList.add("btn", "btn-primary", "m-1")
     startButton.onclick = start
 
     const stopButton = document.createElement("button")
     stopButton.innerText = "Stop"
+    stopButton.classList.add("btn", "btn-primary", "m-1")
     stopButton.onclick = stop
 
     const stepButton = document.createElement("button")
     stepButton.innerText = "Step"
+    stepButton.classList.add("btn", "btn-primary", "m-1")
     stepButton.onclick = () => gol.draw()
 
     const restartButton = document.createElement("button")
     restartButton.innerText = "Restart"
+    restartButton.classList.add("btn", "btn-primary", "m-1")
     restartButton.onclick = restart
 
-    document.body.append(startButton, stopButton, stepButton, restartButton)
+    const editButton = document.createElement("button")
+    editButton.innerText = "Edit"
+    editButton.classList.add("btn", "btn-outline-secondary", "m-1")
+    editButton.onclick = () => {
+        gol.toggleEdit()
+        if (gol.isEditModeActive()) {
+            stop()
+            editButton.classList.add("btn-success")
+            editButton.classList.remove("btn-outline-secondary")
+            clearButton.style.display = "unset"
+        } else {
+            start()
+            editButton.classList.add("btn-outline-secondary")
+            editButton.classList.remove("btn-success")
+            clearButton.style.display = "none"
+        }
+    }
 
-    // setup animation loop
-    const fps = 25;
-    const interval = 1000 / fps;
+    const clearButton = document.createElement("button")
+    clearButton.style.display = gol.isEditModeActive() ? "unset" : "none"
+    clearButton.innerText = "Clear"
+    clearButton.classList.add("btn", "btn-secondary", "m-1")
+    clearButton.onclick = () => {
+        stop()
+        gol.init()
+        gol.draw()
+    }
+
+    editContainer.append(editButton, clearButton)
+    container.append(startButton, stopButton, stepButton, restartButton)
+    document.body.append(container, editContainer)
+
+    // ANIMATION
     let currentMs;
     let lastFrameMs = Date.now();
     let delta;
     let animationId
 
     function start() {
-        animationId = requestAnimationFrame(start);
+        if (!RUNNING) {
+            RUNNING = true
+            draw()
+        }
+    }
+
+    function draw() {
+        animationId = requestAnimationFrame(draw);
 
         // get delta
         currentMs = Date.now();
         delta = currentMs - lastFrameMs;
 
-        if (delta > interval) {
+        if (delta > (1000 / FPS)) {
             // reset time of last frame
-            lastFrameMs = currentMs - (delta % interval);
+            lastFrameMs = currentMs - (delta % (1000 / FPS));
 
             gol.draw()
         }
@@ -59,53 +130,55 @@ window.gol = (function () {
 
     function stop() {
         cancelAnimationFrame(animationId)
+        RUNNING = false
     }
 
     function restart() {
         stop()
         gol.init()
-        //gol.grid.forEach(cell => cell.alive = Util.random())
-        createGliderRightDown(10, 10)
-        createGliderLeftDown(100, 10)
-        createGliderRightUp(10, 100)
-        createGliderLeftUp(100, 100)
+        gol.getGrid().forEach(cell => cell.alive = Util.random(SPAWN_FACTOR))
         gol.draw()
     }
 
-    function createGliderRightDown(x, y) {
-        const step = gol.grid.size
-        gol.grid.getCell(x + 0 * step, y + 1 * step).alive = true
-        gol.grid.getCell(x + 1 * step, y + 2 * step).alive = true
-        gol.grid.getCell(x + 2 * step, y + 0 * step).alive = true
-        gol.grid.getCell(x + 2 * step, y + 1 * step).alive = true
-        gol.grid.getCell(x + 2 * step, y + 2 * step).alive = true
+    // PARTS
+    let parts = 0
+
+    function cycleParts(row, col, overlay) {
+        parts++
+        createPreview(row, col, overlay)
     }
 
-    function createGliderLeftDown(x, y) {
-        const step = gol.grid.size
-        gol.grid.getCell(x + 0 * step, y + 0 * step).alive = true
-        gol.grid.getCell(x + 0 * step, y + 1 * step).alive = true
-        gol.grid.getCell(x + 0 * step, y + 2 * step).alive = true
-        gol.grid.getCell(x + 1 * step, y + 2 * step).alive = true
-        gol.grid.getCell(x + 2 * step, y + 1 * step).alive = true
+    function createPart(row, col, ctx) {
+        getPart(row, col).forEach(cell => {
+            cell.alive = true
+            cell.draw(ctx)
+        })
     }
 
-    function createGliderRightUp(x, y) {
-        const step = gol.grid.size
-        gol.grid.getCell(x + 0 * step, y + 1 * step).alive = true
-        gol.grid.getCell(x + 1 * step, y + 0 * step).alive = true
-        gol.grid.getCell(x + 2 * step, y + 0 * step).alive = true
-        gol.grid.getCell(x + 2 * step, y + 1 * step).alive = true
-        gol.grid.getCell(x + 2 * step, y + 2 * step).alive = true
+    function createPreview(row, col, overlay) {
+        overlay.clearRect(0, 0, WIDTH, HEIGHT)
+        overlay.fillStyle = "rgba(0, 0, 0, 0.5)"
+        getPart(row, col).forEach(cell => {
+            overlay.fillRect(cell.position.x, cell.position.y, cell.size, cell.size)
+        })
     }
 
-    function createGliderLeftUp(x, y) {
-        const step = gol.grid.size
-        gol.grid.getCell(x + 0 * step, y + 0 * step).alive = true
-        gol.grid.getCell(x + 0 * step, y + 1 * step).alive = true
-        gol.grid.getCell(x + 0 * step, y + 2 * step).alive = true
-        gol.grid.getCell(x + 1 * step, y + 0 * step).alive = true
-        gol.grid.getCell(x + 2 * step, y + 1 * step).alive = true
+    function getPart(row, col) {
+        return Parts.get(parts).create(row, col, gol.getGrid())
+    }
+
+    function createGrid(row, col, overlay) {
+        overlay.strokeStyle = "rgba(50, 50, 50)"
+        // row
+        overlay.beginPath();
+        overlay.moveTo(0, row * GameOfLife.CELL_SIZE);
+        overlay.lineTo(WIDTH, row * GameOfLife.CELL_SIZE);
+        overlay.stroke();
+        // col
+        overlay.beginPath();
+        overlay.moveTo(col * GameOfLife.CELL_SIZE, 0);
+        overlay.lineTo(col * GameOfLife.CELL_SIZE, HEIGHT);
+        overlay.stroke();
     }
 
     return gol

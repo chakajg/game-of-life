@@ -2,7 +2,8 @@ export class Util {
 
     private constructor() { }
 
-    static random() {
-        return Math.random() < 0.5
+    static random(factor: number = 0.5) {
+        if (factor <= 0 || factor >= 1) throw Error("Factor must be > 0 and < 1.")
+        return Math.random() < factor
     }
 }

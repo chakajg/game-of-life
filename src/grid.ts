@@ -1,8 +1,8 @@
 export class GridArray<T> {
 
     protected grid: Array<Array<T>>
-    protected cols: number
-    protected rows: number
+    readonly cols: number
+    readonly rows: number
 
     protected populated: boolean
 

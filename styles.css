@@ -1,0 +1,4 @@
+.btn-outline-secondary:focus {
+    color: var(--bs-btn-color);
+    background-color: transparent !important;
+}
